@@ -54,6 +54,10 @@ void drawBalls();
 void handleMouseInput();
 void processCollisions();
 
+	// Calculations
+
+float distanceBetweenPoints(float x1, float y1, float x2, float y2);
+
 
 
 //--------------------------------------------------
@@ -134,7 +138,7 @@ void handleMouseInput()
 {
 	auto isMouseOnBall = [](float mouseX, float mouseY, Ball& ball)
 	{
-		return (mouseX - ball.x) * (mouseX - ball.x) + (mouseY - ball.y) * (mouseY - ball.y) < ball.radius * ball.radius;
+		return distanceBetweenPoints(ball.x, ball.y, mouseX, mouseY) < ball.radius;
 	};
 
 	if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
@@ -171,7 +175,7 @@ void processCollisions()
 {
 	auto isBallsCollides = [](Ball& ball1, Ball& ball2)
 	{
-		return ((ball2.x - ball1.x) * (ball2.x - ball1.x) + (ball2.y - ball1.y) * (ball2.y - ball1.y)) <= (ball1.radius + ball2.radius) * (ball1.radius + ball2.radius);
+		return distanceBetweenPoints(ball1.x, ball1.y, ball2.x, ball2.y) <= ball1.radius + ball2.radius;
 	};
 
 	for (auto& ball : balls)
@@ -182,7 +186,7 @@ void processCollisions()
 			{
 				if (isBallsCollides(ball, targetBall))
 				{
-					float distanceBetweenCenters = sqrt((targetBall.x - ball.x) * (targetBall.x - ball.x) + (targetBall.y - ball.y) * (targetBall.y - ball.y));
+					float distanceBetweenCenters = distanceBetweenPoints(ball.x, ball.y, targetBall.x, targetBall.y);
 					float halfOverlap = 0.5f * (distanceBetweenCenters - ball.radius - targetBall.radius);
 
 					ball.x -= halfOverlap * (ball.x - targetBall.x) / distanceBetweenCenters;
@@ -242,4 +246,13 @@ void drawBalls()
 		changeCircleShape(cs, sf::Color::Green, pSelectedBall);
 		renderWindow->draw(cs);
 	}
+}
+
+
+
+// Calculations
+
+inline float distanceBetweenPoints(float x1, float y1, float x2, float y2)
+{
+	return sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
 }
