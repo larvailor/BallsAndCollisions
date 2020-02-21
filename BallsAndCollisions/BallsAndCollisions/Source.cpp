@@ -80,6 +80,7 @@ int main()
 					renderWindow->close();
 					break;
 				}
+				break;
 			case sf::Event::Closed:
 				renderWindow->close();
 				break;
@@ -126,22 +127,25 @@ void handleMouseInput()
 		return (mouseX - ball.x) * (mouseX - ball.x) + (mouseY - ball.y) * (mouseY - ball.y) < ball.radius * ball.radius;
 	};
 
-	float mouseX = sf::Mouse::getPosition(*renderWindow).x;
-	float mouseY = sf::Mouse::getPosition(*renderWindow).y;
+	if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+	{
+		float mouseX = sf::Mouse::getPosition(*renderWindow).x;
+		float mouseY = sf::Mouse::getPosition(*renderWindow).y;
 
-	if (pSelectedBall)
-	{
-		pSelectedBall->x = mouseX;
-		pSelectedBall->y = mouseY;
-	}
-	else if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
-	{
-		for (auto& ball : balls)
+		if (pSelectedBall)
 		{
-			if (isMouseOnBall(mouseX, mouseY, ball))
+			pSelectedBall->x = mouseX;
+			pSelectedBall->y = mouseY;
+		}
+		else
+		{
+			for (auto& ball : balls)
 			{
-				pSelectedBall = &ball;
-				return;
+				if (isMouseOnBall(mouseX, mouseY, ball))
+				{
+					pSelectedBall = &ball;
+					return;
+				}
 			}
 		}
 	}
@@ -188,8 +192,18 @@ void drawBalls()
 {
 	auto changeCircleShape = [](sf::CircleShape& cs, sf::Color color, Ball* ball)
 	{
-		cs.setOutlineColor(color);
+		if (ball->x > winWidth + ball->radius)
+			ball->x = 0;
+		else if (ball->x < 0 - ball->radius)
+			ball->x = winWidth;
+
+		if (ball->y > winHeight + ball->radius)
+			ball->y = 0;
+		else if (ball->y < 0 - ball->radius)
+			ball->y = winHeight;
+
 		cs.setPosition(ball->x, ball->y);
+
 		cs.setRadius(ball->radius);
 		cs.setOrigin(
 			sf::Vector2f(
@@ -197,6 +211,8 @@ void drawBalls()
 				cs.getLocalBounds().top + ball->radius
 			)
 		);
+
+		cs.setOutlineColor(color);
 	};
 
 	sf::CircleShape cs;
