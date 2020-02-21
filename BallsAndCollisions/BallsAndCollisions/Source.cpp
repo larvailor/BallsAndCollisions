@@ -37,6 +37,9 @@ struct Ball
 std::unique_ptr<sf::RenderWindow> renderWindow;
 
 std::vector<Ball> balls;
+
+Ball* pSelectadBall = nullptr;
+
 unsigned selectedBallIndex = -1;
 bool bSelected = false;
 
@@ -50,6 +53,8 @@ void generateBalls();
 void drawBalls();
 void handleMouseInput();
 inline void changeCircleShape(sf::CircleShape& cs, sf::Color color, Ball& ball);
+void processCollisions();
+
 
 
 //--------------------------------------------------
@@ -85,14 +90,14 @@ int main()
 		renderWindow->clear();
 
 		handleMouseInput();
+		processCollisions();
 		drawBalls();
 
 		bSelected = false;
 		selectedBallIndex = -1;
+
 		renderWindow->display();
 	}
-	
-
 
 	return 0;
 }
@@ -118,6 +123,67 @@ void generateBalls()
 
 
 
+void handleMouseInput()
+{
+	auto isMouseOnBall = [](float mouseX, float mouseY, Ball& ball)
+	{
+		return (mouseX - ball.x) * (mouseX - ball.x) + (mouseY - ball.y) * (mouseY - ball.y) < ball.radius * ball.radius;
+	};
+
+	if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+	{
+		float mouseX = sf::Mouse::getPosition(*renderWindow).x;
+		float mouseY = sf::Mouse::getPosition(*renderWindow).y;
+
+		for (auto& ball : balls)
+		{
+			if (isMouseOnBall(mouseX, mouseY, ball))
+			{
+				bSelected = true;
+				selectedBallIndex = ball.index;
+
+				ball.x = mouseX;
+				ball.y = mouseY;
+
+				return;
+			}
+		}
+	}
+}
+
+
+
+void processCollisions()
+{
+	auto isBallsCollides = [](Ball& ball1, Ball& ball2)
+	{
+		return ((ball2.x - ball1.x) * (ball2.x - ball1.x) + (ball2.y - ball1.y) * (ball2.y - ball1.y)) <= (ball1.radius + ball2.radius) * (ball1.radius + ball2.radius);
+	};
+
+	for (auto& ball : balls)
+	{
+		for (auto& targetBall : balls)
+		{
+			if (ball.index != targetBall.index)
+			{
+				if (isBallsCollides(ball, targetBall))
+				{
+					float distanceBetweenCenters = sqrt((targetBall.x - ball.x) * (targetBall.x - ball.x) + (targetBall.y - ball.y) * (targetBall.y - ball.y));
+					float halfOverlap = 0.5f * (distanceBetweenCenters - ball.radius - targetBall.radius);
+
+					ball.x -= halfOverlap * (ball.x - targetBall.x) / distanceBetweenCenters;
+					ball.y -= halfOverlap * (ball.y - targetBall.y) / distanceBetweenCenters;
+
+					targetBall.x += halfOverlap * (ball.x - targetBall.x) / distanceBetweenCenters;
+					targetBall.y += halfOverlap * (ball.y - targetBall.y) / distanceBetweenCenters;
+				}
+			}
+		}
+	}
+}
+
+
+
 inline void changeCircleShape(sf::CircleShape& cs, sf::Color color, Ball& ball)
 {
 	cs.setOutlineColor(color);
@@ -130,6 +196,8 @@ inline void changeCircleShape(sf::CircleShape& cs, sf::Color color, Ball& ball)
 		)
 	);
 }
+
+
 
 void drawBalls()
 {
@@ -149,28 +217,5 @@ void drawBalls()
 	{
 		changeCircleShape(cs, sf::Color::Green, balls[selectedBallIndex]);
 		renderWindow->draw(cs);
-	}
-}
-
-
-
-void handleMouseInput()
-{
-	if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
-	{
-		float mouseX = sf::Mouse::getPosition(*renderWindow).x;
-		float mouseY = sf::Mouse::getPosition(*renderWindow).y;
-		for (auto& ball : balls)
-		{
-			if (sqrt((mouseX - ball.x) * (mouseX - ball.x) + (mouseY - ball.y) * (mouseY - ball.y)) < ball.radius)
-			{
-				bSelected = true;
-				selectedBallIndex = ball.index;
-
-				ball.x = mouseX;
-				ball.y = mouseY;
-				return;
-			}
-		}
 	}
 }
