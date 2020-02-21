@@ -25,8 +25,9 @@ struct Ball
 	float x;
 	float y;
 	float radius;
+	unsigned index;
 
-	Ball(float x, float y, float radius) : x(x), y(y), radius(radius) { }
+	Ball(float x, float y, float radius, unsigned index) : x(x), y(y), radius(radius), index(index) { }
 };
 
 //--------------------------------------------------
@@ -36,6 +37,8 @@ struct Ball
 std::unique_ptr<sf::RenderWindow> renderWindow;
 
 std::vector<Ball> balls;
+unsigned selectedBallIndex = -1;
+bool bSelected = false;
 
 
 
@@ -45,7 +48,8 @@ std::vector<Ball> balls;
 
 void generateBalls();
 void drawBalls();
-
+void handleMouseInput();
+inline void changeCircleShape(sf::CircleShape& cs, sf::Color color, Ball& ball);
 
 
 //--------------------------------------------------
@@ -80,8 +84,11 @@ int main()
 
 		renderWindow->clear();
 
+		handleMouseInput();
 		drawBalls();
 
+		bSelected = false;
+		selectedBallIndex = -1;
 		renderWindow->display();
 	}
 	
@@ -102,7 +109,8 @@ void generateBalls()
 			Ball(
 				rand() % winWidth,
 				rand() % winHeight,
-				minBallRadius + rand() % maxBallRadius
+				minBallRadius + rand() % maxBallRadius,
+				ballN
 			)
 		);
 	}
@@ -110,16 +118,59 @@ void generateBalls()
 
 
 
+inline void changeCircleShape(sf::CircleShape& cs, sf::Color color, Ball& ball)
+{
+	cs.setOutlineColor(color);
+	cs.setPosition(ball.x, ball.y);
+	cs.setRadius(ball.radius);
+	cs.setOrigin(
+		sf::Vector2f(
+			cs.getLocalBounds().left + ball.radius,
+			cs.getLocalBounds().top + ball.radius
+		)
+	);
+}
+
 void drawBalls()
 {
 	sf::CircleShape cs;
-	cs.setFillColor(sf::Color::Black);
-	cs.setOutlineColor(sf::Color::White);
 	cs.setOutlineThickness(2);
+	cs.setFillColor(sf::Color::Black);
+
 	for (auto& ball : balls)
 	{
-		cs.setPosition(ball.x, ball.y);
-		cs.setRadius(ball.radius);
+		if (ball.index == selectedBallIndex) continue;
+
+		changeCircleShape(cs, sf::Color::White, ball);
 		renderWindow->draw(cs);
+	}
+
+	if (bSelected)
+	{
+		changeCircleShape(cs, sf::Color::Green, balls[selectedBallIndex]);
+		renderWindow->draw(cs);
+	}
+}
+
+
+
+void handleMouseInput()
+{
+	if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+	{
+		float mouseX = sf::Mouse::getPosition(*renderWindow).x;
+		float mouseY = sf::Mouse::getPosition(*renderWindow).y;
+		for (auto& ball : balls)
+		{
+			if (sqrt((mouseX - ball.x) * (mouseX - ball.x) + (mouseY - ball.y) * (mouseY - ball.y)) < ball.radius)
+			{
+				bSelected = true;
+				selectedBallIndex = ball.index;
+
+				ball.x = mouseX;
+				ball.y = mouseY;
+				return;
+			}
+		}
 	}
 }
