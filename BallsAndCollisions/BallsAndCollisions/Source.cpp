@@ -1,3 +1,4 @@
+#include <iostream>
 #include <vector>
 #include <ctime>
 
@@ -30,6 +31,8 @@ struct Ball
 	Ball(float x, float y, float radius, unsigned index) : x(x), y(y), radius(radius), index(index) { }
 };
 
+
+
 //--------------------------------------------------
 //				Global variables
 //
@@ -39,9 +42,6 @@ std::unique_ptr<sf::RenderWindow> renderWindow;
 std::vector<Ball> balls;
 
 Ball* pSelectedBall = nullptr;
-
-unsigned selectedBallIndex = -1;
-bool bSelected = false;
 
 
 
@@ -66,6 +66,8 @@ int main()
 
 	renderWindow = std::make_unique<sf::RenderWindow>(sf::VideoMode(winWidth, winHeight), "BallsAndCollisions", sf::Style::Titlebar | sf::Style::Close);
 	sf::Event event;
+	sf::Clock fpsClock;
+	size_t fps = 0;
 
 	while (renderWindow->isOpen())
 	{
@@ -94,6 +96,14 @@ int main()
 		drawBalls();
 
 		renderWindow->display();
+
+		fps++;
+		if (fpsClock.getElapsedTime().asSeconds() >= 1)
+		{
+			std::cout << "FPS: " << fps << std::endl;
+			fps = 0;
+			fpsClock.restart().asSeconds();
+		}
 	}
 
 	return 0;
@@ -221,7 +231,7 @@ void drawBalls()
 
 	for (auto& ball : balls)
 	{
-		if (ball.index == selectedBallIndex) continue;
+		if (pSelectedBall && ball.index == pSelectedBall->index) continue;
 
 		changeCircleShape(cs, sf::Color::White, &ball);
 		renderWindow->draw(cs);
