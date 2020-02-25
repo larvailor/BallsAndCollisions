@@ -25,6 +25,7 @@ private:
 	//
 
 	static bool detectCircleToCircleCollision(std::shared_ptr<Circle>& sourceCircle, std::shared_ptr<Circle>& destCircle);
+	static bool pointInsideCircle(Point& point, std::shared_ptr<Circle>& figure);
 
 public:
 	/////////////////////////////////////////////////
@@ -38,4 +39,5 @@ public:
 	//
 
 	static bool detectCollision(std::shared_ptr<BaseFigure>& sourceFigure, std::shared_ptr<BaseFigure>& destFigure);
+	static bool pointInside(Point point, std::shared_ptr<BaseFigure>& figure);
 };
