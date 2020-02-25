@@ -46,6 +46,10 @@ Velocity BaseFigure::getCurrVelocity() const
 	return m_currVelocity;
 }
 
+FigureType BaseFigure::getFigureType() const
+{
+	return m_figureType;
+}
 
 
 //	Setters

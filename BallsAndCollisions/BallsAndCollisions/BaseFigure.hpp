@@ -42,6 +42,7 @@ public:
 
 	Weight getWeight() const;
 	Velocity getCurrVelocity() const;
+	FigureType getFigureType() const;
 
 		// Setters
 
