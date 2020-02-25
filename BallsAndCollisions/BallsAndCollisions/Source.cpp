@@ -8,8 +8,7 @@
 #include "SFML/Window.hpp"
 #include "SFML/System.hpp"
 
-#include "Circle.hpp"
-#include "Collisions.hpp"
+#include "Simulation.hpp"
 
 //--------------------------------------------------
 //				Constants
@@ -18,49 +17,16 @@
 const unsigned winWidth = 1280;
 const unsigned winHeight = 720;
 
-const unsigned char minBallsCount = 50;
-const unsigned char maxBallsCount = 70;
-
-const unsigned char minBallRadius = 10;
-const unsigned char maxBallRadius = 50;
-
-struct Ball
-{
-	float x;
-	float y;
-	float radius;
-	unsigned index;
-
-	Ball(float x, float y, float radius, unsigned index) : x(x), y(y), radius(radius), index(index) { }
-};
-
-
-
-//--------------------------------------------------
-//				Global variables
-//
-
-std::unique_ptr<sf::RenderWindow> renderWindow;
-
-std::vector<Ball> balls;
-
-Ball* pSelectedBall = nullptr;
-
 
 
 //--------------------------------------------------
 //				Forward declarations
 //
 
-void generateBalls();
-void drawBalls();
+void drawFigures(sf::RenderWindow& renderWindow, std::vector<std::shared_ptr<BaseFigure>> figures);
+void drawCircle(sf::RenderWindow& renderWindow, std::shared_ptr<Circle>& circle);
 void handleMouseInput();
-void processCollisions();
-
-	// Calculations
-
-float distanceBetweenPoints(float x1, float y1, float x2, float y2);
-
+	
 
 
 //--------------------------------------------------
@@ -69,16 +35,16 @@ float distanceBetweenPoints(float x1, float y1, float x2, float y2);
 
 int main()
 {
-	generateBalls();
+	Simulation simulation(winWidth, winHeight, 70);
 
-	renderWindow = std::make_unique<sf::RenderWindow>(sf::VideoMode(winWidth, winHeight), "BallsAndCollisions", sf::Style::Titlebar | sf::Style::Close);
+	sf::RenderWindow renderWindow(sf::VideoMode(winWidth, winHeight), "BallsAndCollisions", sf::Style::Titlebar | sf::Style::Close);
 	sf::Event event;
 	sf::Clock fpsClock;
 	size_t fps = 0;
 
-	while (renderWindow->isOpen())
+	while (renderWindow.isOpen())
 	{
-		while (renderWindow->pollEvent(event))
+		while (renderWindow.pollEvent(event))
 		{
 			switch (event.type)
 			{
@@ -86,23 +52,22 @@ int main()
 				switch (event.key.code) 
 				{
 				case sf::Keyboard::Escape:
-					renderWindow->close();
+					renderWindow.close();
 					break;
 				}
 				break;
 			case sf::Event::Closed:
-				renderWindow->close();
+				renderWindow.close();
 				break;
 			}
 		}
 
-		renderWindow->clear();
+		renderWindow.clear();
 
 		handleMouseInput();
-		processCollisions();
-		drawBalls();
+		drawFigures(renderWindow, simulation.getFigures());
 
-		renderWindow->display();
+		renderWindow.display();
 
 		fps++;
 		if (fpsClock.getElapsedTime().asSeconds() >= 1)
@@ -118,144 +83,72 @@ int main()
 
 
 
-void generateBalls()
-{
-	std::srand(unsigned(std::time(0)));
-
-	for (size_t ballN = 0; ballN < minBallsCount + rand() % maxBallsCount; ballN++)
-	{
-		balls.emplace_back(
-			Ball(
-				rand() % winWidth,
-				rand() % winHeight,
-				minBallRadius + rand() % maxBallRadius,
-				ballN
-			)
-		);
-	}
-}
-
-
-
 void handleMouseInput()
 {
-	auto isMouseOnBall = [](float mouseX, float mouseY, Ball& ball)
-	{
-		return distanceBetweenPoints(ball.x, ball.y, mouseX, mouseY) < ball.radius;
-	};
+	//auto isMouseOnBall = [](float mouseX, float mouseY, Ball& ball)
+	//{
+	//	return distanceBetweenPoints(ball.x, ball.y, mouseX, mouseY) < ball.radius;
+	//};
 
-	if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
-	{
-		float mouseX = sf::Mouse::getPosition(*renderWindow).x;
-		float mouseY = sf::Mouse::getPosition(*renderWindow).y;
+	//if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+	//{
+	//	float mouseX = sf::Mouse::getPosition(*renderWindow).x;
+	//	float mouseY = sf::Mouse::getPosition(*renderWindow).y;
 
-		if (pSelectedBall)
-		{
-			pSelectedBall->x = mouseX;
-			pSelectedBall->y = mouseY;
-		}
-		else
-		{
-			for (auto& ball : balls)
-			{
-				if (isMouseOnBall(mouseX, mouseY, ball))
-				{
-					pSelectedBall = &ball;
-					return;
-				}
-			}
-		}
-	}
-	else
-	{
-		pSelectedBall = nullptr;
-	}
+	//	if (pSelectedBall)
+	//	{
+	//		pSelectedBall->x = mouseX;
+	//		pSelectedBall->y = mouseY;
+	//	}
+	//	else
+	//	{
+	//		for (auto& ball : figures)
+	//		{
+	//			if (isMouseOnBall(mouseX, mouseY, ball))
+	//			{
+	//				pSelectedBall = &ball;
+	//				return;
+	//			}
+	//		}
+	//	}
+	//}
+	//else
+	//{
+	//	pSelectedBall = nullptr;
+	//}
 }
 
 
 
-void processCollisions()
+void drawFigures(sf::RenderWindow& renderWindow, std::vector<std::shared_ptr<BaseFigure>> figures)
 {
-	auto isBallsCollides = [](Ball& ball1, Ball& ball2)
+	for (auto& figure : figures)
 	{
-		return distanceBetweenPoints(ball1.x, ball1.y, ball2.x, ball2.y) <= ball1.radius + ball2.radius;
-	};
-
-	for (auto& ball : balls)
-	{
-		for (auto& targetBall : balls)
+		switch (figure->getFigureType())
 		{
-			if (ball.index != targetBall.index)
-			{
-				if (isBallsCollides(ball, targetBall))
-				{
-					float distanceBetweenCenters = distanceBetweenPoints(ball.x, ball.y, targetBall.x, targetBall.y);
-					float halfOverlap = 0.5f * (distanceBetweenCenters - ball.radius - targetBall.radius);
-
-					ball.x -= halfOverlap * (ball.x - targetBall.x) / distanceBetweenCenters;
-					ball.y -= halfOverlap * (ball.y - targetBall.y) / distanceBetweenCenters;
-
-					targetBall.x += halfOverlap * (ball.x - targetBall.x) / distanceBetweenCenters;
-					targetBall.y += halfOverlap * (ball.y - targetBall.y) / distanceBetweenCenters;
-				}
-			}
+		case FigureType::CIRCLE:
+			auto circle = std::dynamic_pointer_cast<Circle>(figure);
+			drawCircle(renderWindow, circle);
+			break;
 		}
 	}
-}
+}	
 
-
-
-void drawBalls()
+void drawCircle(sf::RenderWindow& renderWindow, std::shared_ptr<Circle>& circle)
 {
-	auto changeCircleShape = [](sf::CircleShape& cs, sf::Color color, Ball* ball)
-	{
-		if (ball->x > winWidth + ball->radius)
-			ball->x = 0;
-		else if (ball->x < 0 - ball->radius)
-			ball->x = winWidth;
-
-		if (ball->y > winHeight + ball->radius)
-			ball->y = 0;
-		else if (ball->y < 0 - ball->radius)
-			ball->y = winHeight;
-
-		cs.setPosition(ball->x, ball->y);
-
-		cs.setRadius(ball->radius);
-		cs.setOrigin(
-			sf::Vector2f(
-				cs.getLocalBounds().left + ball->radius,
-				cs.getLocalBounds().top + ball->radius
-			)
-		);
-
-		cs.setOutlineColor(color);
-	};
-
-	sf::CircleShape cs;
-	cs.setOutlineThickness(2);
+	static sf::CircleShape cs;
+	cs.setOutlineThickness(-2);
+	cs.setOutlineColor(sf::Color::White);
 	cs.setFillColor(sf::Color::Black);
 
-	for (auto& ball : balls)
-	{
-		if (pSelectedBall && ball.index == pSelectedBall->index) continue;
+	cs.setPosition(circle->getCenter().x, circle->getCenter().y);
+	cs.setRadius(static_cast<float>(circle->getRadius()));
+	cs.setOrigin(
+		sf::Vector2f(
+			cs.getLocalBounds().left + 0.5f * cs.getLocalBounds().width,
+			cs.getLocalBounds().top + 0.5f * cs.getLocalBounds().height
+		)
+	);
 
-		changeCircleShape(cs, sf::Color::White, &ball);
-		renderWindow->draw(cs);
-	}
-
-	if (pSelectedBall)
-	{
-		changeCircleShape(cs, sf::Color::Green, pSelectedBall);
-		renderWindow->draw(cs);
-	}
-}
-
-
-
-// Calculations
-
-inline float distanceBetweenPoints(float x1, float y1, float x2, float y2)
-{
-	return sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+	renderWindow.draw(cs);
 }

@@ -8,7 +8,10 @@
     <ClCompile Include="Circle.cpp">
       <Filter>Figures</Filter>
     </ClCompile>
-    <ClCompile Include="Collisions.cpp" />
+    <ClCompile Include="Collisions.cpp">
+      <Filter>Simulation</Filter>
+    </ClCompile>
+    <ClCompile Include="Simulation.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Figures">
@@ -16,6 +19,9 @@
     </Filter>
     <Filter Include="Types">
       <UniqueIdentifier>{790e1768-5f15-4fb2-befa-d3c1ead18652}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Simulation">
+      <UniqueIdentifier>{a052a915-e12c-49dc-a121-ace0a7a25dd1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -28,6 +34,11 @@
     <ClInclude Include="Circle.hpp">
       <Filter>Figures</Filter>
     </ClInclude>
-    <ClInclude Include="Collisions.hpp" />
+    <ClInclude Include="Collisions.hpp">
+      <Filter>Simulation</Filter>
+    </ClInclude>
+    <ClInclude Include="Simulation.hpp">
+      <Filter>Simulation</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

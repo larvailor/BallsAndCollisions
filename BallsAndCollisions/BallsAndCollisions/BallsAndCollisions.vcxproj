@@ -132,12 +132,14 @@
     <ClCompile Include="BaseFigure.cpp" />
     <ClCompile Include="Circle.cpp" />
     <ClCompile Include="Collisions.cpp" />
+    <ClCompile Include="Simulation.cpp" />
     <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BaseFigure.hpp" />
     <ClInclude Include="Circle.hpp" />
     <ClInclude Include="Collisions.hpp" />
+    <ClInclude Include="Simulation.hpp" />
     <ClInclude Include="Types.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
