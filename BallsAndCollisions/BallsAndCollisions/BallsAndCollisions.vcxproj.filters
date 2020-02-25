@@ -8,6 +8,7 @@
     <ClCompile Include="Circle.cpp">
       <Filter>Figures</Filter>
     </ClCompile>
+    <ClCompile Include="Collisions.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Figures">
@@ -27,5 +28,6 @@
     <ClInclude Include="Circle.hpp">
       <Filter>Figures</Filter>
     </ClInclude>
+    <ClInclude Include="Collisions.hpp" />
   </ItemGroup>
 </Project>

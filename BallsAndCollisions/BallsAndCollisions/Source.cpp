@@ -8,6 +8,9 @@
 #include "SFML/Window.hpp"
 #include "SFML/System.hpp"
 
+#include "Circle.hpp"
+#include "Collisions.hpp"
+
 //--------------------------------------------------
 //				Constants
 //

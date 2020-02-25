@@ -12,6 +12,7 @@ struct Point
 	float y;
 };
 
-typedef float Radius;
+typedef float Length;
+typedef Length Radius;
 typedef float Velocity;
 typedef float Weight;
