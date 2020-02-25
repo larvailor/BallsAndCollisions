@@ -18,14 +18,22 @@ const unsigned winWidth = 1280;
 const unsigned winHeight = 720;
 
 
+//--------------------------------------------------
+//				Global variables
+//
+
+std::shared_ptr<BaseFigure> selectedFigure;
+
+
 
 //--------------------------------------------------
 //				Forward declarations
 //
 
+void handleMouseInput(sf::RenderWindow& renderWindow, std::vector<std::shared_ptr<BaseFigure>> figures);
+
 void drawFigures(sf::RenderWindow& renderWindow, std::vector<std::shared_ptr<BaseFigure>> figures);
 void drawCircle(sf::RenderWindow& renderWindow, std::shared_ptr<Circle>& circle);
-void handleMouseInput();
 	
 
 
@@ -64,7 +72,7 @@ int main()
 
 		renderWindow.clear();
 
-		handleMouseInput();
+		handleMouseInput(renderWindow, simulation.getFigures());
 		drawFigures(renderWindow, simulation.getFigures());
 
 		renderWindow.display();
@@ -83,39 +91,32 @@ int main()
 
 
 
-void handleMouseInput()
+void handleMouseInput(sf::RenderWindow& renderWindow, std::vector<std::shared_ptr<BaseFigure>> figures)
 {
-	//auto isMouseOnBall = [](float mouseX, float mouseY, Ball& ball)
-	//{
-	//	return distanceBetweenPoints(ball.x, ball.y, mouseX, mouseY) < ball.radius;
-	//};
+	if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+	{
+		Point mousePos{ sf::Mouse::getPosition(renderWindow).x, sf::Mouse::getPosition(renderWindow).y };
 
-	//if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
-	//{
-	//	float mouseX = sf::Mouse::getPosition(*renderWindow).x;
-	//	float mouseY = sf::Mouse::getPosition(*renderWindow).y;
-
-	//	if (pSelectedBall)
-	//	{
-	//		pSelectedBall->x = mouseX;
-	//		pSelectedBall->y = mouseY;
-	//	}
-	//	else
-	//	{
-	//		for (auto& ball : figures)
-	//		{
-	//			if (isMouseOnBall(mouseX, mouseY, ball))
-	//			{
-	//				pSelectedBall = &ball;
-	//				return;
-	//			}
-	//		}
-	//	}
-	//}
-	//else
-	//{
-	//	pSelectedBall = nullptr;
-	//}
+		if (selectedFigure)
+		{
+			std::dynamic_pointer_cast<Circle>(selectedFigure)->setCenter(mousePos);
+		}
+		else
+		{
+			for (auto& figure : figures)
+			{
+				if (CollisionsDetector::pointInside(mousePos, figure))
+				{
+					selectedFigure = figure;
+					return;
+				}
+			}
+		}
+	}
+	else
+	{
+		selectedFigure = nullptr;
+	}
 }
 
 
@@ -138,7 +139,10 @@ void drawCircle(sf::RenderWindow& renderWindow, std::shared_ptr<Circle>& circle)
 {
 	static sf::CircleShape cs;
 	cs.setOutlineThickness(-2);
-	cs.setOutlineColor(sf::Color::White);
+	if (selectedFigure.get() == circle.get())
+		cs.setOutlineColor(sf::Color::Green);
+	else
+		cs.setOutlineColor(sf::Color::White);
 	cs.setFillColor(sf::Color::Black);
 
 	cs.setPosition(circle->getCenter().x, circle->getCenter().y);
