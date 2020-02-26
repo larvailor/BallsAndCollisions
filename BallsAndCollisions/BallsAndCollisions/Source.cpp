@@ -32,6 +32,8 @@ std::shared_ptr<BaseFigure> selectedFigure;
 
 void handleMouseInput(sf::RenderWindow& renderWindow, std::vector<std::shared_ptr<BaseFigure>> figures);
 
+void handleCollisions(std::vector<std::shared_ptr<BaseFigure>> figures);
+
 void drawFigures(sf::RenderWindow& renderWindow, std::vector<std::shared_ptr<BaseFigure>> figures);
 void drawCircle(sf::RenderWindow& renderWindow, std::shared_ptr<Circle>& circle);
 	
@@ -73,6 +75,7 @@ int main()
 		renderWindow.clear();
 
 		handleMouseInput(renderWindow, simulation.getFigures());
+		handleCollisions(simulation.getFigures());
 		drawFigures(renderWindow, simulation.getFigures());
 
 		renderWindow.display();
@@ -95,7 +98,7 @@ void handleMouseInput(sf::RenderWindow& renderWindow, std::vector<std::shared_pt
 {
 	if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
 	{
-		Point mousePos{ sf::Mouse::getPosition(renderWindow).x, sf::Mouse::getPosition(renderWindow).y };
+		Point mousePos(static_cast<float>(sf::Mouse::getPosition(renderWindow).x), static_cast<float>(sf::Mouse::getPosition(renderWindow).y));
 
 		if (selectedFigure)
 		{
@@ -116,6 +119,25 @@ void handleMouseInput(sf::RenderWindow& renderWindow, std::vector<std::shared_pt
 	else
 	{
 		selectedFigure = nullptr;
+	}
+}
+
+
+
+void handleCollisions(std::vector<std::shared_ptr<BaseFigure>> figures)
+{
+	for (auto& figure : figures)
+	{
+		for (auto& targetFigure : figures)
+		{
+			if (figure.get() != targetFigure.get())
+			{
+				if (CollisionsDetector::detectCollision(figure, targetFigure))
+				{
+					CollisionsDetector::handleCollision(figure, targetFigure);
+				}
+			}
+		}
 	}
 }
 
@@ -143,6 +165,7 @@ void drawCircle(sf::RenderWindow& renderWindow, std::shared_ptr<Circle>& circle)
 		cs.setOutlineColor(sf::Color::Green);
 	else
 		cs.setOutlineColor(sf::Color::White);
+
 	cs.setFillColor(sf::Color::Black);
 
 	cs.setPosition(circle->getCenter().x, circle->getCenter().y);
